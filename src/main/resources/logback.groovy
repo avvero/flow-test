@@ -9,20 +9,22 @@
 
 // For professional support please see
 //   http://www.qos.ch/shop/products/professionalSupport
+import ch.qos.logback.classic.AsyncAppender
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
-import ch.qos.logback.classic.net.SocketAppender
 import ch.qos.logback.core.ConsoleAppender
+import com.avvero.flow.support.logback.StreamPerEventSocketAppender
 
 import static ch.qos.logback.classic.Level.TRACE
 
-appender("A1", SocketAppender) {
+appender("SOCKET", StreamPerEventSocketAppender) {
     remoteHost = "localhost"
     port = 4561
-    queueSize = 1
+    queueSize = Integer.MAX_VALUE
+//    queueSize = 2000
 }
-//appender("A1", AsyncAppender) {
-//    appenderRef("SOCKET")
-//}
+appender("A1", AsyncAppender) {
+    appenderRef("SOCKET")
+}
 
 appender("stdout", ConsoleAppender) {
     target = "System.out"
