@@ -8,7 +8,7 @@ import java.io.IOException;
  */
 public class Robot {
 
-    private static int X = 10000;
+    private static int X = 1000;
     private static int T = 1;
 
     private static final Logger log = LoggerFactory.getLogger(Robot.class);
@@ -23,11 +23,6 @@ public class Robot {
                     String info = "First line \n\r";
                     log.info("Info " + i1 + " " + info);
                     log.warn("Warn " + i1 + getWarn());
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                 }
             });
             thread.join();

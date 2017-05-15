@@ -19,6 +19,8 @@ import java.io.Serializable;
  */
 public class MarkerSocketAppender extends AbstractStreamPerEventSocketAppender<ILoggingEvent> {
 
+    public static final String MT = "MESSAGE\ndestination:%s\ncontent-type:text/plain\ncontent-length:%s\n\n%s";
+
     private static final PreSerializationTransformer<ILoggingEvent> pst =
             new LoggingEventPreSerializationTransformer();
 
@@ -40,12 +42,7 @@ public class MarkerSocketAppender extends AbstractStreamPerEventSocketAppender<I
     protected byte[] transformEvent(ILoggingEvent event) throws IOException {
         Serializable serializableEvent = getPST().transform(event);
         String m = mapper.writeValueAsString(serializableEvent);
-        m = "MESSAGE\n" +
-                "destination:" + marker + "\n" +
-                "content-type:text/plain\n" +
-                "content-length:" + m.getBytes().length + "\n" +
-                "\n" + m;
-        return m.getBytes();
+        return String.format(MT, marker, m.getBytes().length, m).getBytes();
     }
 
     public void setIncludeCallerData(boolean includeCallerData) {
