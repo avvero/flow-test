@@ -8,24 +8,36 @@ import java.io.IOException;
  */
 public class Robot {
 
-    private static int X = 1000;
-    private static int T = 10;
+    private static int X = 10000;
+    private static int T = 1;
 
     private static final Logger log = LoggerFactory.getLogger(Robot.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         for (int i = 0; i < T; i++) {
-            new Thread(() -> {
+            Thread thread =  new Thread(() -> {
                 for (int i1 = 0; i1 < X; i1++) {
                     log.trace("Trace " + i1);
-//                        log.debug("Debug " + i);
-//                        log.info("Info " + i);
-//                        log.warn("Warn " + i);
-//                        log.error("Error " + i);
+                    String debug = "First line "+i1+" \n\rSecond line "+i1+"\n\rThird line <xml><d>1</d></xml>"+i1+"\n\r";
+                    log.debug("Debug " + i1 + " " + debug);
+                    String info = "First line \n\r";
+                    log.info("Info " + i1 + " " + info);
+                    log.warn("Warn " + i1 + getWarn());
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }).start();
+            });
+            thread.join();
+            thread.start();
         }
-        System.in.read();
+        Thread.sleep(500000);
+    }
+
+    private static String getWarn() {
+        return "";
     }
 
 }

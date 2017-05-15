@@ -12,18 +12,15 @@
 import ch.qos.logback.classic.AsyncAppender
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.core.ConsoleAppender
-import com.avvero.flow.support.logback.StreamPerEventSocketAppender
+import com.avvero.flow.support.logback.MarkerSocketAppender
 
 import static ch.qos.logback.classic.Level.TRACE
 
-appender("SOCKET", StreamPerEventSocketAppender) {
+appender("SOCKET", MarkerSocketAppender) {
     remoteHost = "localhost"
     port = 4561
     queueSize = Integer.MAX_VALUE
-//    queueSize = 2000
-}
-appender("A1", AsyncAppender) {
-    appenderRef("SOCKET")
+    marker = "test"
 }
 
 appender("stdout", ConsoleAppender) {
@@ -35,5 +32,5 @@ appender("stdout", ConsoleAppender) {
 }
 
 
-//logger("com.fxclub.fxbank", TRACE, ["file", "stdout", "A1"])
-root(TRACE, ["A1", "stdout"])
+logger("com", TRACE, ["file", "stdout", "SOCKET"])
+root(TRACE, ["SOCKET", "stdout"])

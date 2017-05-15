@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/wloggen.iml" filepath="$PROJECT_DIR$/wloggen.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/flow-test.iml" filepath="$PROJECT_DIR$/.idea/modules/flow-test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/flow-test_main.iml" filepath="$PROJECT_DIR$/.idea/modules/flow-test_main.iml" group="flow-test" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/flow-test_test.iml" filepath="$PROJECT_DIR$/.idea/modules/flow-test_test.iml" group="flow-test" />
     </modules>
   </component>
 </project>

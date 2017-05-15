@@ -1,11 +1,13 @@
 package com.avvero.flow.support.logback;
 
 import ch.qos.logback.core.AppenderBase;
-import ch.qos.logback.core.net.*;
+import ch.qos.logback.core.net.DefaultSocketConnector;
+import ch.qos.logback.core.net.ObjectWriterFactory;
+import ch.qos.logback.core.net.QueueFactory;
+import ch.qos.logback.core.net.SocketConnector;
 import ch.qos.logback.core.spi.PreSerializationTransformer;
 import ch.qos.logback.core.util.CloseUtil;
 import ch.qos.logback.core.util.Duration;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.net.SocketFactory;
 import java.io.IOException;
@@ -15,7 +17,6 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -28,18 +29,6 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class AbstractStreamPerEventSocketAppender<E> extends AppenderBase<E>
         implements SocketConnector.ExceptionHandler {
-
-    private int hasCome = 0;
-    private int hasSend = 0;
-    private ObjectMapper mapper = new ObjectMapper();
-
-    public synchronized int getHasCome() {
-        return ++hasCome;
-    }
-
-    public synchronized int getHasSend() {
-        return ++hasSend;
-    }
 
     /**
      * The default port number of remote logging server (4560).
@@ -206,11 +195,11 @@ public abstract class AbstractStreamPerEventSocketAppender<E> extends AppenderBa
         return (socket = connector.call()) != null;
     }
 
-    private ObjectWriter createObjectWriterForSocket() throws IOException {
+    private OutputStream createOutputStream() throws IOException {
         socket.setSoTimeout(acceptConnectionTimeout);
-        ObjectWriter objectWriter = objectWriterFactory.newAutoFlushingObjectWriter(socket.getOutputStream());
+        OutputStream outputStream = socket.getOutputStream();
         socket.setSoTimeout(0);
-        return objectWriter;
+        return outputStream;
     }
 
     private SocketConnector createConnector(InetAddress address, int port, int initialDelay, long retryDelay) {
@@ -220,14 +209,6 @@ public abstract class AbstractStreamPerEventSocketAppender<E> extends AppenderBa
         return connector;
     }
 
-    static int i;
-
-    synchronized static int getI() {
-        return ++i;
-    }
-
-    ;
-
     /**
      * Here goes some differences - creates objectWriter for each events
      *
@@ -235,27 +216,22 @@ public abstract class AbstractStreamPerEventSocketAppender<E> extends AppenderBa
      * @throws IOException
      */
     private void dispatchEvents() throws InterruptedException, IOException {
-        while (true) {
-            E event = deque.takeFirst();
-            postProcessEvent(event);
-            Serializable serializableEvent = getPST().transform(event);
-            try (OutputStream os = socket.getOutputStream()) {
-                String m = mapper.writeValueAsString(serializableEvent);
-                os.write(("MESSAGE\n" +
-                        "subscription:sub-0\n" +
-                        "message-id:007\n" +
-                        "destination:test\n" +
-                        "content-type:text/plain\n" +
-                        "content-length:" + m.getBytes().length + "\n" +
-                        "\n" + m).getBytes());
-                os.flush();
-                System.out.println("dispatch");
-            } catch (IOException e) {
-                tryReAddingEventToFrontOfQueue(event);
-                throw e;
+        try (OutputStream out = createOutputStream()) {
+            while (true) {
+                E event = deque.takeFirst();
+                postProcessEvent(event);
+                try {
+                    out.write(transformEvent(event));
+                    out.flush();
+                } catch (IOException e) {
+                    tryReAddingEventToFrontOfQueue(event);
+                    throw e;
+                }
             }
         }
     }
+
+    protected abstract byte[] transformEvent(E event) throws IOException;
 
     private void tryReAddingEventToFrontOfQueue(E event) {
         final boolean wasInserted = deque.offerFirst(event);
